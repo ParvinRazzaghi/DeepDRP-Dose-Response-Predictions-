@@ -221,13 +221,18 @@ del X_tensor_1, X_auxiliary_1, X_tensor_2, X_auxiliary_2, X_1, X_2
 # Read responses
 y  = np.loadtxt(my_path+"/responses.csv", delimiter = ",", skiprows = 1)
 y = np.concatenate((y, y), axis=0)
-X_tr = X[0:400000,:]
-y_tr = y[0:400000]
-X_te = X[400000:,:]
-y_te = y[400000:]
+
+
+# Simple technique to divide the data
+X_tr = X[0:800000,:]
+y_tr = y[0:800000]
+X_te = X[800000:,:]
+y_te = y[800000:]
 idx_drugA1 = np.concatenate(((idx_drugA, idx_drugB)), axis=0)#(idx_drugA, idx_drugB)
 idx_drugB1 = np.concatenate(((idx_drugB, idx_drugA)), axis=0)#(idx_drugA, idx_drugB)
 idx_drugA1_tr, idx_drugA1_te, idx_drugB1_tr, idx_drugB1_te = idx_drugA1[0:400000], idx_drugA1[400000:], idx_drugB1[0:400000], idx_drugB1[400000:]
+
+
 # Read cross-validation folds and divide the data
 """te_idx = np.loadtxt('cross-validation_folds/%s/test_idx_outer_fold-%d.txt'%(experiment, outer_fold)).astype(int)
 tr_idx = np.loadtxt('cross-validation_folds/%s/train_idx_outer_fold-%d.txt'%(experiment, outer_fold)).astype(int)
@@ -243,6 +248,9 @@ print('Test set shape: {}'.format(X_te.shape))
 
 # Standardize, i_aux is denotes the index from which the auxiliary descriptors to be standardized start (one-hot encodings should not be standardized)
 X_tr, X_te = standardize(X_tr, X_te, i_aux)"""
+
+
+# Training STEP
 
 smiles_dict = {"#": 29, "%": 30, ")": 31, "(": 1, "+": 32, "-": 33, "/": 34, ".": 2,
                 "1": 35, "0": 3, "3": 36, "2": 4, "5": 37, "4": 5, "7": 38, "6": 6,
@@ -408,6 +416,8 @@ model_pred.fit(generate_data(batch_size=512), epochs=1, steps_per_epoch=int(len(
                )
 
 
+# Define k-nearesr neighbour model
+
 
 import pandas as pd
 
@@ -423,7 +433,7 @@ from sklearn.neighbors import NearestNeighbors
 knn = NearestNeighbors(n_neighbors=3)
 
 
-
+# Test STEP
 
 def generate_data(batch_size, counter):
   i_c = counter * batch_size
@@ -568,7 +578,8 @@ for ii in range (0, nb_epochs):
 
 y_pred = []
 for i_c in range(0, len(X_te)): 
-    y_pred.append(model.predict(generate_data_val(1, i_c), steps= len(X_te )))
+    y_pred.append(model.predict(generate_data_val(1, i_c), steps= len(X_te ))[0])
 
 correlation_coefficient = np.corrcoef(y_te, y_pred)[0, 1]
+print('correlation_coefficient:  ', correlation_coefficient)
 
